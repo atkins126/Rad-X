@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -54,6 +54,8 @@ var
   ds_xstep: fixed_t;
   ds_ystep: fixed_t;
   ds_angle: angle_t;  // JVAL: 20200221 - Texture angle
+  ds_anglex: fixed_t; // JVAL: 20201229 - Texture angle rover
+  ds_angley: fixed_t; // JVAL: 20201229 - Texture angle rover
   ds_sine: float;     // JVAL: 20200225 - Texture angle
   ds_cosine: float;   // JVAL: 20200225 - Texture angle
   ds_viewsine: float;     // JVAL: 20200225 - Texture angle

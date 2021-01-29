@@ -1899,6 +1899,7 @@ var
   p: pointer;
   size: integer;
   ch: char;
+  radixlumpnames: TDStringList;
 
   function remove_underline(const s: string): string;
   var
@@ -2045,27 +2046,36 @@ begin
   f.Seek(bstart, sFromBeginning);
   f.Read(blumps^, bnumlumps * SizeOf(radixbitmaplump_t));
 
+  // JVAL: 20201211 - Speed up a bit :)
+  radixlumpnames := TDStringList.Create;
+  for i := 0 to bnumlumps - 1 do
+    radixlumpnames.Add(radixlumpname(blumps[i]));
+
   // JVAL: 20200426 - Patch doublicated names of ObjectBitmaps
-  
+
   if bnumlumps > 2 then
   begin
-    if (radixlumpname(blumps[0]) = 'SecondCoolant1') and
-       (radixlumpname(blumps[1]) = 'SecondCoolant1') and
-       (radixlumpname(blumps[2]) = 'SecondCoolant1') then
+    if (radixlumpnames.Strings[0] = 'SecondCoolant1') and
+       (radixlumpnames.Strings[1] = 'SecondCoolant1') and
+       (radixlumpnames.Strings[2] = 'SecondCoolant1') then
     begin
       blumps[1].name[13] := '2';
+      radixlumpnames.Strings[1] := radixlumpname(blumps[1]);
       blumps[2].name[13] := '3';
+      radixlumpnames.Strings[2] := radixlumpname(blumps[2]);
     end;
   end;
 
   if bnumlumps > 8 then
   begin
-    if (radixlumpname(blumps[6]) = 'CoolantGener1') and
-       (radixlumpname(blumps[7]) = 'CoolantGener1') and
-       (radixlumpname(blumps[8]) = 'CoolantGener1') then
+    if (radixlumpnames.Strings[6] = 'CoolantGener1') and
+       (radixlumpnames.Strings[7] = 'CoolantGener1') and
+       (radixlumpnames.Strings[8] = 'CoolantGener1') then
     begin
       blumps[7].name[12] := '2';
+      radixlumpnames.Strings[7] := radixlumpname(blumps[7]);
       blumps[8].name[12] := '3';
+      radixlumpnames.Strings[8] := radixlumpname(blumps[8]);
     end;
   end;
 
@@ -2076,15 +2086,24 @@ begin
   // Check watersplash
   for j := 0 to bnumlumps - 1 do
     for i := 1 to 6 do
-      if radixlumpname(blumps[j]) = 'WaterSplash' + itoa(i) then
+      if radixlumpnames.Strings[j] = 'WaterSplash' + itoa(i) then
         splash_bmps[i].Add(j);
 
   if splash_bmps[1].Count = 2 then
+  begin
     blumps[splash_bmps[1].Numbers[0]].name[11] := '7';
+    radixlumpnames.Strings[splash_bmps[1].Numbers[0]] := radixlumpname(blumps[splash_bmps[1].Numbers[0]]);
+  end;
   if splash_bmps[2].Count = 2 then
+  begin
     blumps[splash_bmps[2].Numbers[0]].name[11] := '8';
+    radixlumpnames.Strings[splash_bmps[2].Numbers[0]] := radixlumpname(blumps[splash_bmps[2].Numbers[0]]);
+  end;
   if splash_bmps[3].Count = 2 then
+  begin
     blumps[splash_bmps[3].Numbers[0]].name[11] := '9';
+    radixlumpnames.Strings[splash_bmps[3].Numbers[0]] := radixlumpname(blumps[splash_bmps[3].Numbers[0]]);
+  end;
 
   for i := 1 to 6 do
     splash_bmps[i].FastClear;
@@ -2092,15 +2111,24 @@ begin
   // Check mudsplash
   for j := 0 to bnumlumps - 1 do
     for i := 1 to 6 do
-      if radixlumpname(blumps[j]) = 'MudSplash' + itoa(i) then
+      if radixlumpnames.Strings[j] = 'MudSplash' + itoa(i) then
         splash_bmps[i].Add(j);
 
   if splash_bmps[1].Count = 2 then
+  begin
     blumps[splash_bmps[1].Numbers[0]].name[9] := '7';
+    radixlumpnames.Strings[splash_bmps[1].Numbers[0]] := radixlumpname(blumps[splash_bmps[1].Numbers[0]]);
+  end;
   if splash_bmps[2].Count = 2 then
+  begin
     blumps[splash_bmps[2].Numbers[0]].name[9] := '8';
+    radixlumpnames.Strings[splash_bmps[2].Numbers[0]] := radixlumpname(blumps[splash_bmps[2].Numbers[0]]);
+  end;
   if splash_bmps[3].Count = 2 then
+  begin
     blumps[splash_bmps[3].Numbers[0]].name[9] := '9';
+    radixlumpnames.Strings[splash_bmps[3].Numbers[0]] := radixlumpname(blumps[splash_bmps[3].Numbers[0]]);
+  end;
 
   for i := 1 to 6 do
     splash_bmps[i].FastClear;
@@ -2108,15 +2136,24 @@ begin
   // Check LavaSplash
   for j := 0 to bnumlumps - 1 do
     for i := 1 to 6 do
-      if radixlumpname(blumps[j]) = 'LavaSplash' + itoa(i) then
+      if radixlumpnames.Strings[j] = 'LavaSplash' + itoa(i) then
         splash_bmps[i].Add(j);
 
   if splash_bmps[1].Count = 2 then
+  begin
     blumps[splash_bmps[1].Numbers[0]].name[10] := '7';
+    radixlumpnames.Strings[splash_bmps[1].Numbers[0]] := radixlumpname(blumps[splash_bmps[1].Numbers[0]]);
+  end;
   if splash_bmps[2].Count = 2 then
+  begin
     blumps[splash_bmps[2].Numbers[0]].name[10] := '8';
+    radixlumpnames.Strings[splash_bmps[2].Numbers[0]] := radixlumpname(blumps[splash_bmps[2].Numbers[0]]);
+  end;
   if splash_bmps[3].Count = 2 then
+  begin
     blumps[splash_bmps[3].Numbers[0]].name[10] := '9';
+    radixlumpnames.Strings[splash_bmps[3].Numbers[0]] := radixlumpname(blumps[splash_bmps[3].Numbers[0]]);
+  end;
 
   for i := 1 to 6 do
     splash_bmps[i].Free;
@@ -2591,7 +2628,7 @@ begin
 
     bl := nil;
     for i := 0 to bnumlumps - 1 do
-      if radixlumpname(blumps[i]) = spr.rname then
+      if radixlumpnames.Strings[i] = spr.rname then
       begin
         bl := @blumps[i];
         break;
@@ -2601,7 +2638,7 @@ begin
     begin
       spr.rname := remove_underline(spr.rname);
       for i := 0 to bnumlumps - 1 do
-        if radixlumpname(blumps[i]) = spr.rname then
+        if radixlumpnames.Strings[i] = spr.rname then
         begin
           bl := @blumps[i];
           break;
@@ -2679,6 +2716,7 @@ begin
     memfree(p, size);
   end;
 
+  radixlumpnames.Free;
   bmp.Free;
 
   wadwriter.AddSeparator('S_END');

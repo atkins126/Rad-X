@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -56,6 +56,9 @@ function PS_TActor(const key: LongWord): LongWord;
 
 function PS_GetActorTarget(const key: LongWord): LongWord;
 procedure PS_SetActorTarget(const key: LongWord; const targ: LongWord);
+
+function PS_GetActorTracer(const key: LongWord): LongWord;
+procedure PS_SetActorTracer(const key: LongWord; const trac: LongWord);
 
 function PS_GetActorMaster(const key: LongWord): LongWord;
 procedure PS_SetActorMaster(const key: LongWord; const mast: LongWord);
@@ -385,6 +388,24 @@ function PS_GetSectorCeilingYOffset(const sec: Integer): Integer;
 procedure PS_SetSectorCeilingYOffset(const sec: Integer; const offs: Integer);
 {$ENDIF}
 
+function PS_GetSectorFloorAngle(const sec: Integer): LongWord;
+procedure PS_SetSectorFloorAngle(const sec: Integer; const ang: LongWord);
+
+function PS_GetSectorFloorAngleX(const sec: Integer): Integer;
+procedure PS_SetSectorFloorAngleX(const sec: Integer; const angx: Integer);
+
+function PS_GetSectorFloorAngleY(const sec: Integer): Integer;
+procedure PS_SetSectorFloorAngleY(const sec: Integer; const angy: Integer);
+
+function PS_GetSectorCeilingAngle(const sec: Integer): LongWord;
+procedure PS_SetSectorCeilingAngle(const sec: Integer; const ang: LongWord);
+
+function PS_GetSectorCeilingAngleX(const sec: Integer): Integer;
+procedure PS_SetSectorCeilingAngleX(const sec: Integer; const angx: Integer);
+
+function PS_GetSectorCeilingAngleY(const sec: Integer): Integer;
+procedure PS_SetSectorCeilingAngleY(const sec: Integer; const angy: Integer);
+
 function PS_GetSectorRippleFloor(const sec: Integer): Boolean;
 procedure PS_SetSectorRippleFloor(const sec: Integer; const rpl: Boolean);
 
@@ -601,6 +622,86 @@ function PS_Game: string;
 procedure PS_GlobalEarthQuake(const tics: integer);
 
 function PS_GameSkill: integer;
+// ------------------ KEYBOARD CONTROL -----------------------------------------
+function PS_gamekeydown(const kkey: integer): boolean;
+
+function PS_mousebuttons(const mkey: integer): boolean;
+
+function PS_joybuttons(const jkey: integer): boolean;
+
+function PS_key_right: integer;
+
+function PS_key_left: integer;
+
+function PS_key_up: integer;
+
+function PS_key_down: integer;
+
+function PS_key_lookup: integer;
+
+function PS_key_lookdown: integer;
+
+function PS_key_lookcenter: integer;
+
+function PS_key_lookright: integer;
+
+function PS_key_lookleft: integer;
+
+function PS_key_lookforward: integer;
+
+function PS_key_strafeleft: integer;
+
+function PS_key_straferight: integer;
+
+function PS_key_fire: integer;
+
+function PS_key_use: integer;
+
+function PS_key_strafe: integer;
+
+function PS_key_speed: integer;
+
+function PS_key_flyup: integer;
+
+function PS_key_flydown: integer;
+
+function PS_key_weapon0: integer;
+
+function PS_key_weapon1: integer;
+
+function PS_key_weapon2: integer;
+
+function PS_key_weapon3: integer;
+
+function PS_key_weapon4: integer;
+
+function PS_key_weapon5: integer;
+
+function PS_key_weapon6: integer;
+
+function PS_key_weapon7: integer;
+
+function PS_key_plasmabomb: integer;
+
+function PS_key_afterburner: integer;
+
+function PS_mousebfire: integer;
+
+function PS_mousebstrafe: integer;
+
+function PS_mousebforward: integer;
+
+function PS_joybfire: integer;
+
+function PS_joybstrafe: integer;
+
+function PS_joybuse: integer;
+
+function PS_joybspeed: integer;
+
+function PS_joyblleft: integer;
+
+function PS_joyblright: integer;
 
 // ---------------------- REGISTRATION -----------------------------------------
 
@@ -715,6 +816,7 @@ uses
   doomdef,
   doomdata,
   d_player,
+  d_event,
   d_think,
   g_game,
   info_h,
@@ -819,6 +921,34 @@ begin
   if mo = nil then
     Exit;
   mo.target := mobj_from_key(targ);
+end;
+
+function PS_GetActorTracer(const key: LongWord): LongWord;
+var
+  mo: Pmobj_t;
+  tmo: Pmobj_t;
+begin
+  mo := mobj_from_key(key);
+  if mo = nil then
+  begin
+    Result := ACTOR_INVALID;
+    Exit;
+  end;
+  tmo := mo.tracer;
+  if tmo <> nil then
+    Result := tmo.key
+  else
+    Result := ACTOR_INVALID;
+end;
+
+procedure PS_SetActorTracer(const key: LongWord; const trac: LongWord);
+var
+  mo: Pmobj_t;
+begin
+  mo := mobj_from_key(key);
+  if mo = nil then
+    Exit;
+  mo.tracer := mobj_from_key(trac);
 end;
 
 function PS_GetActorMaster(const key: LongWord): LongWord;
@@ -2498,6 +2628,16 @@ begin
   T := TRTLActor(PS_GetActorTarget(LongWord(Self)));
 end;
 
+procedure TRTLActorTracer_W(Self: TRTLActor; const T: TRTLActor);
+begin
+  PS_SetActorTracer(LongWord(Self), LongWord(T));
+end;
+
+procedure TRTLActorTracer_R(Self: TRTLActor; var T: TRTLActor);
+begin
+  T := TRTLActor(PS_GetActorTracer(LongWord(Self)));
+end;
+
 procedure TRTLActorMaster_W(Self: TRTLActor; const T: TRTLActor);
 begin
   PS_SetActorMaster(LongWord(Self), LongWord(T));
@@ -3890,6 +4030,108 @@ begin
 end;
 {$ENDIF}
 
+function PS_GetSectorFloorAngle(const sec: Integer): LongWord;
+begin
+  if (sec >= 0) and (sec < numsectors) then
+    Result := sectors[sec].floorangle
+  else
+    Result := 0;
+end;
+
+procedure PS_SetSectorFloorAngle(const sec: Integer; const ang: LongWord);
+begin
+  if (sec >= 0) and (sec < numsectors) then
+  begin
+    sectors[sec].floorangle := ang;
+    sectors[sec].renderflags := sectors[sec].renderflags or SRF_INTERPOLATE_ROTATE;
+  end;
+end;
+
+function PS_GetSectorFloorAngleX(const sec: Integer): Integer;
+begin
+  if (sec >= 0) and (sec < numsectors) then
+    Result := sectors[sec].flooranglex
+  else
+    Result := 0;
+end;
+
+procedure PS_SetSectorFloorAngleX(const sec: Integer; const angx: Integer);
+begin
+  if (sec >= 0) and (sec < numsectors) then
+  begin
+    sectors[sec].flooranglex := angx;
+    sectors[sec].renderflags := sectors[sec].renderflags or SRF_INTERPOLATE_ROTATE;
+  end;
+end;
+
+function PS_GetSectorFloorAngleY(const sec: Integer): Integer;
+begin
+  if (sec >= 0) and (sec < numsectors) then
+    Result := sectors[sec].floorangley
+  else
+    Result := 0;
+end;
+
+procedure PS_SetSectorFloorAngleY(const sec: Integer; const angy: Integer);
+begin
+  if (sec >= 0) and (sec < numsectors) then
+  begin
+    sectors[sec].floorangley := angy;
+    sectors[sec].renderflags := sectors[sec].renderflags or SRF_INTERPOLATE_ROTATE;
+  end;
+end;
+
+function PS_GetSectorCeilingAngle(const sec: Integer): LongWord;
+begin
+  if (sec >= 0) and (sec < numsectors) then
+    Result := sectors[sec].ceilingangle
+  else
+    Result := 0;
+end;
+
+procedure PS_SetSectorCeilingAngle(const sec: Integer; const ang: LongWord);
+begin
+  if (sec >= 0) and (sec < numsectors) then
+  begin
+    sectors[sec].ceilingangle := ang;
+    sectors[sec].renderflags := sectors[sec].renderflags or SRF_INTERPOLATE_ROTATE;
+  end;
+end;
+
+function PS_GetSectorCeilingAngleX(const sec: Integer): Integer;
+begin
+  if (sec >= 0) and (sec < numsectors) then
+    Result := sectors[sec].ceilinganglex
+  else
+    Result := 0;
+end;
+
+procedure PS_SetSectorCeilingAngleX(const sec: Integer; const angx: Integer);
+begin
+  if (sec >= 0) and (sec < numsectors) then
+  begin
+    sectors[sec].ceilinganglex := angx;
+    sectors[sec].renderflags := sectors[sec].renderflags or SRF_INTERPOLATE_ROTATE;
+  end;
+end;
+
+function PS_GetSectorCeilingAngleY(const sec: Integer): Integer;
+begin
+  if (sec >= 0) and (sec < numsectors) then
+    Result := sectors[sec].ceilingangley
+  else
+    Result := 0;
+end;
+
+procedure PS_SetSectorCeilingAngleY(const sec: Integer; const angy: Integer);
+begin
+  if (sec >= 0) and (sec < numsectors) then
+  begin
+    sectors[sec].ceilingangley := angy;
+    sectors[sec].renderflags := sectors[sec].renderflags or SRF_INTERPOLATE_ROTATE;
+  end;
+end;
+
 function PS_GetSectorRippleFloor(const sec: Integer): Boolean;
 begin
   if (sec >= 0) and (sec < numsectors) then
@@ -4213,6 +4455,66 @@ end;
 procedure TRTLSectorFloorHeight_R(Self: TRTLSector; var T: fixed_t);
 begin
   T := PS_GetSectorFloorHeight(Integer(Self) - 1);
+end;
+
+procedure TRTLSectorFloorAngle_W(Self: TRTLSector; const T: LongWord);
+begin
+  PS_SetSectorFloorAngle(Integer(Self) - 1, T);
+end;
+
+procedure TRTLSectorFloorAngle_R(Self: TRTLSector; var T: LongWord);
+begin
+  T := PS_GetSectorFloorAngle(Integer(Self) - 1);
+end;
+
+procedure TRTLSectorFloorAngleX_W(Self: TRTLSector; const T: Integer);
+begin
+  PS_SetSectorFloorAngleX(Integer(Self) - 1, T);
+end;
+
+procedure TRTLSectorFloorAngleX_R(Self: TRTLSector; var T: Integer);
+begin
+  T := PS_GetSectorFloorAngleX(Integer(Self) - 1);
+end;
+
+procedure TRTLSectorFloorAngleY_W(Self: TRTLSector; const T: Integer);
+begin
+  PS_SetSectorFloorAngleY(Integer(Self) - 1, T);
+end;
+
+procedure TRTLSectorFloorAngleY_R(Self: TRTLSector; var T: Integer);
+begin
+  T := PS_GetSectorFloorAngleY(Integer(Self) - 1);
+end;
+
+procedure TRTLSectorCeilingAngle_W(Self: TRTLSector; const T: LongWord);
+begin
+  PS_SetSectorCeilingAngle(Integer(Self) - 1, T);
+end;
+
+procedure TRTLSectorCeilingAngle_R(Self: TRTLSector; var T: LongWord);
+begin
+  T := PS_GetSectorCeilingAngle(Integer(Self) - 1);
+end;
+
+procedure TRTLSectorCeilingAngleX_W(Self: TRTLSector; const T: Integer);
+begin
+  PS_SetSectorCeilingAngleX(Integer(Self) - 1, T);
+end;
+
+procedure TRTLSectorCeilingAngleX_R(Self: TRTLSector; var T: Integer);
+begin
+  T := PS_GetSectorCeilingAngleX(Integer(Self) - 1);
+end;
+
+procedure TRTLSectorCeilingAngleY_W(Self: TRTLSector; const T: Integer);
+begin
+  PS_SetSectorCeilingAngleY(Integer(Self) - 1, T);
+end;
+
+procedure TRTLSectorCeilingAngleY_R(Self: TRTLSector; var T: Integer);
+begin
+  T := PS_GetSectorCeilingAngleY(Integer(Self) - 1);
 end;
 
 procedure TRTLSectorRippleFloor_W(Self: TRTLSector; const T: Boolean);
@@ -5468,6 +5770,333 @@ begin
   Result := Ord(gameskill);
 end;
 
+// ------------------ KEYBOARD CONTROL -----------------------------------------
+function PS_gamekeydown(const kkey: integer): boolean;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := False
+  else if IsIntegerInRange(kkey, 0, NUMKEYS - 1) then
+    Result := gamekeydown[kkey]
+  else
+    Result := False;
+end;
+
+function PS_mousebuttons(const mkey: integer): boolean;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := False
+  else if IsIntegerInRange(mkey, 0, 2) then
+    Result := mousebuttons[mkey]
+  else
+    Result := False;
+end;
+
+function PS_joybuttons(const jkey: integer): boolean;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := False
+  else if IsIntegerInRange(jkey, 0, NUMJOYBUTTONS - 1) then
+    Result := joybuttons[jkey]
+  else
+    Result := False;
+end;
+
+function PS_key_right: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_right;
+end;
+
+function PS_key_left: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_left;
+end;
+
+function PS_key_up: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_up;
+end;
+
+function PS_key_down: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_down;
+end;
+
+function PS_key_lookup: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_lookup;
+end;
+
+function PS_key_lookdown: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_lookdown;
+end;
+
+function PS_key_lookcenter: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_lookcenter;
+end;
+
+function PS_key_lookright: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_lookright;
+end;
+
+function PS_key_lookleft: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_lookleft;
+end;
+
+function PS_key_lookforward: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_lookforward;
+end;
+
+function PS_key_strafeleft: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_strafeleft;
+end;
+
+function PS_key_straferight: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_straferight;
+end;
+
+function PS_key_fire: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_fire;
+end;
+
+function PS_key_use: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_use;
+end;
+
+function PS_key_strafe: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_strafe;
+end;
+
+function PS_key_speed: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_speed;
+end;
+
+function PS_key_flyup: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_flyup;
+end;
+
+function PS_key_flydown: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_flydown;
+end;
+
+function PS_key_weapon0: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon0;
+end;
+
+function PS_key_weapon1: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon1;
+end;
+
+function PS_key_weapon2: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon2;
+end;
+
+function PS_key_weapon3: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon3;
+end;
+
+function PS_key_weapon4: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon4;
+end;
+
+function PS_key_weapon5: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon5;
+end;
+
+function PS_key_weapon6: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon6;
+end;
+
+function PS_key_weapon7: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_weapon7;
+end;
+
+function PS_key_plasmabomb: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_plasmabomb;
+end;
+
+function PS_key_afterburner: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := key_afterburner;
+end;
+
+function PS_mousebfire: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := mousebfire;
+end;
+
+function PS_mousebstrafe: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := mousebstrafe;
+end;
+
+function PS_mousebforward: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := mousebforward;
+end;
+
+function PS_joybfire: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := joybfire;
+end;
+
+function PS_joybstrafe: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := joybstrafe;
+end;
+
+function PS_joybuse: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := joybuse;
+end;
+
+function PS_joybspeed: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := joybspeed;
+end;
+
+function PS_joyblleft: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := joyblleft;
+end;
+
+function PS_joyblright: integer;
+begin
+  if demoplayback or demorecording or netgame then
+    Result := 0
+  else
+    Result := joyblright;
+end;
+
 // ---------------------- REGISTRATION -----------------------------------------
 
 // Compiler Registration
@@ -5501,6 +6130,7 @@ begin
 
   cactor.RegisterProperty('key', 'LongWord', iptR);
   cactor.RegisterProperty('Target', '!TActor', iptRW);
+  cactor.RegisterProperty('Tracer', '!TActor', iptRW);
   cactor.RegisterProperty('Master', '!TActor', iptRW);
   cactor.RegisterProperty('X', 'fixed_t', iptRW);
   cactor.RegisterProperty('Y', 'fixed_t', iptRW);
@@ -5624,6 +6254,12 @@ begin
   csector.RegisterProperty('MidSector', '!TSector', iptR);
   csector.RegisterProperty('SlopeSector', '!TSector', iptR);
   csector.RegisterProperty('ID', 'Integer', iptR);
+  csector.RegisterProperty('FloorAngle', 'angle_t', iptRW);
+  csector.RegisterProperty('FloorAngleX', 'fixed_t', iptRW);
+  csector.RegisterProperty('FloorAngleY', 'fixed_t', iptRW);
+  csector.RegisterProperty('CeilingAngle', 'angle_t', iptRW);
+  csector.RegisterProperty('CeilingAngleX', 'fixed_t', iptRW);
+  csector.RegisterProperty('CeilingAngleY', 'fixed_t', iptRW);
   csector.RegisterProperty('RippleFloor', 'boolean', iptRW);
   csector.RegisterProperty('RippleCeiling', 'boolean', iptRW);
   csector.RegisterProperty('Interpolate', 'boolean', iptRW);
@@ -5726,6 +6362,7 @@ begin
 
   ractor.RegisterPropertyHelper(@TRTLActorkey_R, nil, 'key');
   ractor.RegisterPropertyHelper(@TRTLActorTarget_R, @TRTLActorTarget_W, 'Target');
+  ractor.RegisterPropertyHelper(@TRTLActorTracer_R, @TRTLActorTracer_W, 'Tracer');
   ractor.RegisterPropertyHelper(@TRTLActorMaster_R, @TRTLActorMaster_W, 'Master');
   ractor.RegisterPropertyHelper(@TRTLActorX_R, @TRTLActorX_W, 'X');
   ractor.RegisterPropertyHelper(@TRTLActorY_R, @TRTLActorY_W, 'Y');
@@ -5847,11 +6484,18 @@ begin
   rsector.RegisterPropertyHelper(@TRTLSectorMidSector_R, nil, 'MidSector');
   rsector.RegisterPropertyHelper(@TRTLSectorSlopeSector_R, nil, 'SlopeSector');
   rsector.RegisterPropertyHelper(@TRTLSectorID_R, nil, 'ID');
+  rsector.RegisterPropertyHelper(@TRTLSectorFloorAngle_R, @TRTLSectorFloorAngle_W, 'FloorAngle');
+  rsector.RegisterPropertyHelper(@TRTLSectorFloorAngleX_R, @TRTLSectorFloorAngleX_W, 'FloorAngleX');
+  rsector.RegisterPropertyHelper(@TRTLSectorFloorAngleY_R, @TRTLSectorFloorAngleY_W, 'FloorAngleY');
+  rsector.RegisterPropertyHelper(@TRTLSectorCeilingAngle_R, @TRTLSectorCeilingAngle_W, 'CeilingAngle');
+  rsector.RegisterPropertyHelper(@TRTLSectorCeilingAngleX_R, @TRTLSectorCeilingAngleX_W, 'CeilingAngleX');
+  rsector.RegisterPropertyHelper(@TRTLSectorCeilingAngleY_R, @TRTLSectorCeilingAngleY_W, 'CeilingAngleY');
   rsector.RegisterPropertyHelper(@TRTLSectorRippleFloor_R, @TRTLSectorRippleFloor_W, 'RippleFloor');
   rsector.RegisterPropertyHelper(@TRTLSectorRippleCeiling_R, @TRTLSectorRippleCeiling_W, 'RippleCeiling');
   rsector.RegisterPropertyHelper(@TRTLSectorInterpolate_R, @TRTLSectorInterpolate_W, 'Interpolate');
   rsector.RegisterPropertyHelper(@TRTLSectorGravity_R, @TRTLSectorGravity_W, 'Gravity');
   rsector.RegisterMethod(@TRTLSector.PlaySound, 'PlaySound');
+  rsector.RegisterMethod(@TRTLSector.MoveZ, 'MoveZ');
   rsector.RegisterMethod(@TRTLSector.SetFloorSlope, 'SetFloorSlope');
   rsector.RegisterMethod(@TRTLSector.SetCeilingSlope, 'SetCeilingSlope');
 

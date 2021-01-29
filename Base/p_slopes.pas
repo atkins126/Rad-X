@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -66,6 +66,7 @@ uses
   doomdata,
   m_vectors,
   radix_map_extra,
+  p_gravity,
   p_setup,
   p_mobj_h,
   p_spec,
@@ -316,6 +317,7 @@ end;
 procedure P_FixSlopedMobjs(const s: Psector_t);
 var
   mo: Pmobj_t;
+  grav: fixed_t;
 begin
   mo := s.thinglist;
   // JVAL: 20200429 - Sector thinglist consistency
@@ -323,9 +325,20 @@ begin
   while (mo <> nil) and (mo.sectorvalidcount <> sectorvalidcount) do
   begin
     mo.sectorvalidcount := sectorvalidcount;
+
+    if mo.flags and MF_NOGRAVITY <> 0 then
+      grav := 0
+    else
+      grav := FixedMul(P_GetSectorGravity(s), mo.gravity);
+
     mo.floorz := P_FloorHeight(s, mo.x, mo.y);
-    if  mo.z < mo.floorz then
-      mo.z := mo.floorz;
+    mo.ceilingz := P_CeilingHeight(s, mo.x, mo.y);
+
+    if mo.z - grav < mo.floorz then
+      mo.z := mo.floorz
+    else if (grav = 0) or (mo.z > mo.ceilingz) then
+      mo.z := mo.ceilingz;
+
     mo := mo.snext;
   end;
 end;
@@ -365,9 +378,9 @@ end;
 
 procedure P_SlopesSetup;
 var
-  i: integer;
+  i, j: integer;
 begin
-  // JVAL: 20200225 - Create slopes from radix map 
+  // JVAL: 20200225 - Create slopes from radix map
   for i := 0 to numsectors - 1 do
   begin
     if sectors[i].renderflags and SRF_RADIXSLOPEFLOOR <> 0 then
@@ -386,6 +399,11 @@ begin
       sectors[i].slopeline := sectors[i].lines[0];
       sectors[i].slopeline.renderflags := sectors[i].slopeline.renderflags or LRF_SLOPED;
     end;
+    if sectors[i].renderflags and (SRF_RADIXSLOPEFLOOR or SRF_RADIXSLOPECEILING) <> 0 then
+      for j := 0 to sectors[i].linecount - 1 do
+        if sectors[i].lines[j].frontsector <> nil then
+          if sectors[i].lines[j].backsector <> nil then
+            sectors[i].lines[j].flags := sectors[i].lines[j].flags or ML_NOCLIP;
   end;
 
   for i := 0 to numlines - 1 do

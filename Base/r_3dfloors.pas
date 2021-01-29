@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -1195,6 +1195,23 @@ begin
     vis.yoffs := mid.floor_yoffs;
   end;
   {$ENDIF}
+
+  // JVAL: 20201229 - Texture angle
+  // If virtualfloor we take the angle from the mid ceiling
+  // If not virtualfloor we take the angle from the mid floor
+  if virtualfloor then
+  begin
+    vis.angle := mid.ceilingangle;
+    vis.anglex := mid.ceilinganglex;
+    vis.angley := mid.ceilingangley;
+  end
+  else
+  begin
+    vis.angle := mid.floorangle;
+    vis.anglex := mid.flooranglex;
+    vis.angley := mid.floorangley;
+  end;
+
   vis.renderflags := mid.renderflags or SRF_FFLOOR;
   if virtualfloor then
     vis.renderflags := mid.renderflags and not SRF_RIPPLE_FLOOR

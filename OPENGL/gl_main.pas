@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -732,6 +732,7 @@ begin
       WM_DESTROY:
         begin
           result := 0;
+          ShowWindow(hWnd, SW_HIDE);
           I_Destroy(0);
           exit;
         end;
@@ -1012,6 +1013,7 @@ begin
     AM_Start;               // Start the aytomap
     C_AdjustScreenSize;
     R_ExecuteSetViewSize;   // Set-up new SCREENWIDTH & SCREENHEIGHT
+    overlay.ReCalcOverlayLookUp;
     result := true;
   end;
 end;
@@ -1031,7 +1033,7 @@ begin
   begin
     src := @p[i * SCREENWIDTH];
     dest := @p[(SCREENHEIGHT - i - 1) * SCREENWIDTH];
-    for j := 0 to SCREENWIDTH do
+    for j := 0 to SCREENWIDTH - 1 do
     begin
       buf := dest[j];
       dest[j] := src[j];

@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -197,6 +197,7 @@ var
 begin
   if numslopeitems < 3 then
     exit;
+
   slopeinfo := mallocz(numsectors * SizeOf(slopeitem_t));
 
   th := thinkercap.next;
@@ -379,6 +380,7 @@ var
   rover: Pvertex_t;
   VV: array[0..2] of Pvertex_t;
   fa, fb, fc, fd: float;
+  i: integer;
 begin
   if numslopeitems <= 0 then
     exit;
@@ -445,6 +447,10 @@ begin
         P_SlopesAlignPlane(@sectors[secid], nil, SRF_SLOPEFLOOR, false);
         sectors[secid].slopeline := sectors[secid].lines[0];
         sectors[secid].slopeline.renderflags := sectors[secid].slopeline.renderflags or LRF_SLOPED;
+        for i := 0 to sectors[secid].linecount - 1 do
+          if sectors[secid].lines[i].frontsector <> nil then
+            if sectors[secid].lines[i].backsector <> nil then
+              sectors[secid].lines[i].flags := sectors[secid].lines[i].flags or ML_NOCLIP;
       end;
     end;
     if slopeinfo[secid].numceilingcontrols > 0 then
@@ -469,6 +475,10 @@ begin
         P_SlopesAlignPlane(@sectors[secid], nil, SRF_SLOPECEILING, false);
         sectors[secid].slopeline := sectors[secid].lines[0];
         sectors[secid].slopeline.renderflags := sectors[secid].slopeline.renderflags or LRF_SLOPED;
+        for i := 0 to sectors[secid].linecount - 1 do
+          if sectors[secid].lines[i].frontsector <> nil then
+            if sectors[secid].lines[i].backsector <> nil then
+              sectors[secid].lines[i].flags := sectors[secid].lines[i].flags or ML_NOCLIP;
       end;
     end;
   end;
@@ -485,7 +495,8 @@ end;
 function P_SpawnEasySlopeThing(mthing: Pmapthing_t): Pmobj_t;
 begin
   result := P_SpawnMapThing(mthing);
-  inc(numslopeitems);
+  if result <> nil then
+    inc(numslopeitems);
 end;
 
 end.

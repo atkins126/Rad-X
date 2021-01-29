@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -3241,7 +3241,11 @@ begin
           ang := R_PointToAngle2(lines[i].v1.x, lines[i].v1.y, lines[i].v2.x, lines[i].v2.y);
           s := -1;
           while P_FindSectorFromLineTag2(@lines[i], s) >= 0 do
+          begin
             sectors[s].floorangle := ang;
+            sectors[s].flooranglex := lines[i].v1.x;
+            sectors[s].floorangley := lines[i].v1.y;
+          end;
         end;
       // JVAL: 20200517 - Rotate sector ceiling
       285:
@@ -3249,7 +3253,11 @@ begin
           ang := R_PointToAngle2(lines[i].v1.x, lines[i].v1.y, lines[i].v2.x, lines[i].v2.y);
           s := -1;
           while P_FindSectorFromLineTag2(@lines[i], s) >= 0 do
+          begin
             sectors[s].ceilingangle := ang;
+            sectors[s].ceilinganglex := lines[i].v1.x;
+            sectors[s].ceilingangley := lines[i].v1.y;
+          end;
         end;
       // JVAL: 20200519
       //        286: Destructible line - on death instand lower tagged sector floor
@@ -3608,10 +3616,10 @@ begin
     tmbbox[BOXRIGHT]  := p.x + radius;
     tmbbox[BOXLEFT]   := p.x - radius;
 
-    xl := MapBlockIntX(int64(tmbbox[BOXLEFT]) - bmaporgx - MAXRADIUS);
-    xh := MapBlockIntX(int64(tmbbox[BOXRIGHT]) - bmaporgx + MAXRADIUS);
-    yl := MapBlockIntY(int64(tmbbox[BOXBOTTOM]) - bmaporgy - MAXRADIUS);
-    yh := MapBlockIntY(int64(tmbbox[BOXTOP]) - bmaporgy + MAXRADIUS);
+    xl := MapBlockIntX(int64(tmbbox[BOXLEFT]) - int64(bmaporgx) - MAXRADIUS);
+    xh := MapBlockIntX(int64(tmbbox[BOXRIGHT]) - int64(bmaporgx) + MAXRADIUS);
+    yl := MapBlockIntY(int64(tmbbox[BOXBOTTOM]) - int64(bmaporgy) - MAXRADIUS);
+    yh := MapBlockIntY(int64(tmbbox[BOXTOP]) - int64(bmaporgy) + MAXRADIUS);
 
     bx := xl;
     while bx <= xh do

@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -189,6 +189,8 @@ begin
   baseproclist.AddWithCustomResult('procedure TActor(const key: LongWord);', '!TActor', 'function TActor(const key: LongWord): !TActor;', @PS_TActor);
   baseproclist.Add('function GetActorTarget(const key: LongWord): LongWord;', @PS_GetActorTarget);
   baseproclist.Add('procedure SetActorTarget(const key: LongWord; const targ: LongWord);', @PS_SetActorTarget);
+  baseproclist.Add('function GetActorTracer(const key: LongWord): LongWord;', @PS_GetActorTracer);
+  baseproclist.Add('procedure SetActorTracer(const key: LongWord; const targ: LongWord);', @PS_SetActorTracer);
   baseproclist.Add('function GetActorMaster(const key: LongWord): LongWord;', @PS_GetActorMaster);
   baseproclist.Add('procedure SetActorMaster(const key: LongWord; const targ: LongWord);', @PS_SetActorMaster);
   baseproclist.Add('function GetActorX(const key: LongWord): fixed_t;', @PS_GetActorX);
@@ -359,6 +361,18 @@ begin
   baseproclist.Add('function GetSectorCeilingYOffset(const sec: Integer): fixed_t;', @PS_GetSectorCeilingYOffset);
   baseproclist.Add('procedure SetSectorCeilingYOffset(const sec: Integer; const offs: fixed_t);', @PS_SetSectorCeilingYOffset);
   {$ENDIF}
+  baseproclist.Add('function GetSectorFloorAngle(const sec: Integer): angle_t;', @PS_GetSectorFloorAngle);
+  baseproclist.Add('procedure SetSectorFloorAngle(const sec: Integer; const ang: angle_t);', @PS_SetSectorFloorAngle);
+  baseproclist.Add('function GetSectorFloorAngleX(const sec: Integer): fixed_t;', @PS_GetSectorFloorAngleX);
+  baseproclist.Add('procedure SetSectorFloorAngleX(const sec: Integer; const angx: fixed_t);', @PS_SetSectorFloorAngleX);
+  baseproclist.Add('function GetSectorFloorAngleY(const sec: Integer): fixed_t;', @PS_GetSectorFloorAngleY);
+  baseproclist.Add('procedure SetSectorFloorAngleY(const sec: Integer; const angy: fixed_t);', @PS_SetSectorFloorAngleY);
+  baseproclist.Add('function GetSectorCeilingAngle(const sec: Integer): angle_t;', @PS_GetSectorCeilingAngle);
+  baseproclist.Add('procedure SetSectorCeilingAngle(const sec: Integer; const ang: angle_t);', @PS_SetSectorCeilingAngle);
+  baseproclist.Add('function GetSectorCeilingAngleX(const sec: Integer): fixed_t;', @PS_GetSectorCeilingAngleX);
+  baseproclist.Add('procedure SetSectorCeilingAngleX(const sec: Integer; const angx: fixed_t);', @PS_SetSectorCeilingAngleX);
+  baseproclist.Add('function GetSectorCeilingAngleY(const sec: Integer): fixed_t;', @PS_GetSectorCeilingAngleY);
+  baseproclist.Add('procedure SetSectorCeilingAngleY(const sec: Integer; const angy: fixed_t);', @PS_SetSectorCeilingAngleY);
   baseproclist.Add('function GetSectorRippleFloor(const sec: Integer): Boolean;', @PS_GetSectorRippleFloor);
   baseproclist.Add('procedure SetSectorRippleFloor(const sec: Integer; const rpl: Boolean);', @PS_SetSectorRippleFloor);
   baseproclist.Add('function GetSectorRippleCeiling(const sec: Integer): Boolean;', @PS_GetSectorRippleCeiling);
@@ -498,6 +512,47 @@ begin
   {$IFDEF DOOM_OR_HERETIC}
   baseproclist.Add('function GameEpisode: integer;', @PS_GameEpisode);
   {$ENDIF}
+// ------------------ KEYBOARD CONTROL -----------------------------------------
+  baseproclist.Add('function gamekeydown(const kkey: integer): boolean;', @PS_gamekeydown);
+  baseproclist.Add('function mousebuttons(const mkey: integer): boolean;', @PS_mousebuttons);
+  baseproclist.Add('function joybuttons(const jkey: integer): boolean;', @PS_joybuttons);
+  baseproclist.Add('function key_right: integer;', @PS_key_right);
+  baseproclist.Add('function key_left: integer;', @PS_key_left);
+  baseproclist.Add('function key_up: integer;', @PS_key_up);
+  baseproclist.Add('function key_down: integer;', @PS_key_down);
+  baseproclist.Add('function key_lookup: integer;', @PS_key_lookup);
+  baseproclist.Add('function key_lookdown: integer;', @PS_key_lookdown);
+  baseproclist.Add('function key_lookcenter: integer;', @PS_key_lookcenter);
+  baseproclist.Add('function key_lookright: integer;', @PS_key_lookright);
+  baseproclist.Add('function key_lookleft: integer;', @PS_key_lookleft);
+  baseproclist.Add('function key_lookforward: integer;', @PS_key_lookforward);
+  baseproclist.Add('function key_strafeleft: integer;', @PS_key_strafeleft);
+  baseproclist.Add('function key_straferight: integer;', @PS_key_straferight);
+  baseproclist.Add('function key_fire: integer;', @PS_key_fire);
+  baseproclist.Add('function key_use: integer;', @PS_key_use);
+  baseproclist.Add('function key_strafe: integer;', @PS_key_strafe);
+  baseproclist.Add('function key_speed: integer;', @PS_key_speed);
+  baseproclist.Add('function key_flyup: integer;', @PS_key_flyup);
+  baseproclist.Add('function key_flydown: integer;', @PS_key_flydown);
+  baseproclist.Add('function key_weapon0: integer;', @PS_key_weapon0);
+  baseproclist.Add('function key_weapon1: integer;', @PS_key_weapon1);
+  baseproclist.Add('function key_weapon2: integer;', @PS_key_weapon2);
+  baseproclist.Add('function key_weapon3: integer;', @PS_key_weapon3);
+  baseproclist.Add('function key_weapon4: integer;', @PS_key_weapon4);
+  baseproclist.Add('function key_weapon5: integer;', @PS_key_weapon5);
+  baseproclist.Add('function key_weapon6: integer;', @PS_key_weapon6);
+  baseproclist.Add('function key_weapon7: integer;', @PS_key_weapon7);
+  baseproclist.Add('function key_plasmabomb: integer;', @PS_key_plasmabomb);
+  baseproclist.Add('function key_afterburner: integer;', @PS_key_afterburner);
+  baseproclist.Add('function mousebfire: integer;', @PS_mousebfire);
+  baseproclist.Add('function mousebstrafe: integer;', @PS_mousebstrafe);
+  baseproclist.Add('function mousebforward: integer;', @PS_mousebforward);
+  baseproclist.Add('function joybfire: integer;', @PS_joybfire);
+  baseproclist.Add('function joybstrafe: integer;', @PS_joybstrafe);
+  baseproclist.Add('function joybuse: integer;', @PS_joybuse);
+  baseproclist.Add('function joybspeed: integer;', @PS_joybspeed);
+  baseproclist.Add('function joyblleft: integer;', @PS_joyblleft);
+  baseproclist.Add('function joyblright: integer;', @PS_joyblright);
 // ------------------------------- MAP -----------------------------------------
   baseproclist.Add('function R_PointToAngle(x: fixed_t; y: fixed_t): angle_t;', @R_PointToAngle);
   baseproclist.Add('function R_PointToAngle2(const x1: fixed_t; const y1: fixed_t; const x2: fixed_t; const y2: fixed_t): angle_t;', @R_PointToAngle2);
@@ -525,7 +580,10 @@ begin
   baseproclist := TProcedureList.Create(basename);
   baseproclist.Add('procedure OverlayClear;', @PS_OverlayClear);
   baseproclist.Add('procedure OverlayDrawPatch(const ticks : Integer; const patchname : string; const x, y : Integer);', @PS_OverlayDrawPatch);
+  baseproclist.Add('procedure OverlayDrawPatchStretched(const ticks: Integer; const patchname: string; const x1, y1, x2, y2: Integer);', @PS_OverlayDrawPatchStretched);
   baseproclist.Add('procedure OverlayDrawPixel(const ticks : Integer; const red, green, blue : byte; const x, y : Integer);', @PS_OverlayDrawPixel);
+  baseproclist.Add('procedure OverlayDrawRect(const ticks: Integer; const red, green, blue: byte; const x1, y1, x2, y2: Integer);', @PS_OverlayDrawRect);
+  baseproclist.Add('procedure OverlayDrawLine(const ticks: Integer; const red, green, blue: byte; const x1, y1, x2, y2: Integer);', @PS_OverlayDrawLine);
   baseproclist.Add('procedure OverlayDrawText(const ticks : Integer; const txt : string; const align : Integer; const x, y : Integer);', @PS_OverlayDrawText);
   baseproclist.Add('procedure OverlayDrawLeftText(const ticks : Integer; const txt : string; const x, y : Integer);', @PS_OverlayDrawLeftText);
   baseproclist.Add('procedure OverlayDrawRightText(const ticks : Integer; const txt : string; const x, y : Integer);', @PS_OverlayDrawRightText);

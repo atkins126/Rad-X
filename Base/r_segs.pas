@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -769,6 +769,9 @@ begin
         markfloor := (worldlow <> worldbottom) or
                      (backsector.floorpic <> frontsector.floorpic) or
                      (backsector.lightlevel <> frontsector.lightlevel) or
+                     (backsector.floorangle <> frontsector.floorangle) or
+                     (backsector.flooranglex <> frontsector.flooranglex) or
+                     (backsector.floorangley <> frontsector.floorangley) or
                      {$IFDEF DOOM_OR_STRIFE}
                      // killough 3/7/98: Add checks for (x,y) offsets
                      (backsector.floor_xoffs <> frontsector.floor_xoffs) or
@@ -788,6 +791,9 @@ begin
         markceiling := (worldhigh <> worldtop) or
                        (backsector.ceilingpic <> frontsector.ceilingpic) or
                        (backsector.lightlevel <> frontsector.lightlevel) or
+                       (backsector.ceilingangle <> frontsector.ceilingangle) or
+                       (backsector.ceilinganglex <> frontsector.ceilinganglex) or
+                       (backsector.ceilingangley <> frontsector.ceilingangley) or
                        {$IFDEF DOOM_OR_STRIFE}
                        // killough 3/7/98: Add checks for (x,y) offsets
                        (backsector.ceiling_xoffs <> frontsector.ceiling_xoffs) or
@@ -1218,7 +1224,7 @@ begin
   if stop > start then
   begin
     pds.scale2 := R_ScaleFromGlobalAngle(viewangle + xtoviewangle[stop], overflow);
-    if overflow or (precisescalefromglobalangle and (pds.midsec <> nil) and (pds.scale2 > 64 * FRACUNIT))  then
+    if overflow or (precisescalefromglobalangle and (pds.midsec <> nil) and (pds.scale2 > 64 * FRACUNIT)) then
     begin
       R_StoreWallRange_DBL(pds, start, stop);
       exit;
@@ -1378,6 +1384,9 @@ begin
         markfloor := (worldlow <> worldbottom) or
                      (backsector.floorpic <> frontsector.floorpic) or
                      (backsector.lightlevel <> frontsector.lightlevel) or
+                     (backsector.floorangle <> frontsector.floorangle) or
+                     (backsector.flooranglex <> frontsector.flooranglex) or
+                     (backsector.floorangley <> frontsector.floorangley) or
                      {$IFDEF DOOM_OR_STRIFE}
                      // killough 3/7/98: Add checks for (x,y) offsets
                      (backsector.floor_xoffs <> frontsector.floor_xoffs) or
@@ -1397,6 +1406,9 @@ begin
         markceiling := (worldhigh <> worldtop) or
                        (backsector.ceilingpic <> frontsector.ceilingpic) or
                        (backsector.lightlevel <> frontsector.lightlevel) or
+                       (backsector.ceilingangle <> frontsector.ceilingangle) or
+                       (backsector.ceilinganglex <> frontsector.ceilinganglex) or
+                       (backsector.ceilingangley <> frontsector.ceilingangley) or
                        {$IFDEF DOOM_OR_STRIFE}
                        // killough 3/7/98: Add checks for (x,y) offsets
                        (backsector.ceiling_xoffs <> frontsector.ceiling_xoffs) or

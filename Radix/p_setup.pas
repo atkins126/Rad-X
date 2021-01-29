@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -177,6 +177,7 @@ uses
   p_3dfloors, // JVAL: 3d Floors
   p_slopes,   // JVAL: Slopes
   p_easyslope,
+  p_easyangle, // JVAL: 20201229 - Easy floor and ceiling texture angle
   p_affectees,
   p_musinfo,
   p_animdefs,
@@ -287,6 +288,11 @@ var
   ml: Pmapvertex_t;
   li: Pvertex_t;
   numglverts: integer;
+  minx: integer;
+  maxx: integer;
+  miny: integer;
+  maxy: integer;
+  dx, dy: integer;
 begin
   // Determine number of lumps:
   //  total lump length / vertex record length.
@@ -308,17 +314,36 @@ begin
 
   ml := Pmapvertex_t(data);
 
+  // JVAL: 20201228 -> Find map boundaries
+  minx := 100000;
+  maxx := -100000;
+  miny := 100000;
+  maxy := -100000;
+
   // Copy and convert vertex coordinates,
   // internal representation as fixed.
   li := @vertexes[0];
   for i := 0 to firstglvert - 1 do
   begin
+    if ml.x > maxx then
+      maxx := ml.x;
+    if ml.x < minx then
+      minx := ml.x;
+    if ml.y > maxy then
+      maxy := ml.y;
+    if ml.y < miny then
+      miny := ml.y;
     li.x := ml.x * FRACUNIT;
     li.y := ml.y * FRACUNIT;
     li.amvalidcount := 0;
     inc(ml);
     inc(li);
   end;
+
+  dx := maxx - minx;
+  dy := maxy - miny;
+
+  largemap := (dx < -32767) or (dx > 32767) or (dy < -32767) or (dy > 32767);
 
   // Free buffer memory.
   Z_Free(data);
@@ -693,8 +718,12 @@ begin
     ss.radixmapYadd := 0;
     ss.radixflags := 0;
     // JVAL: 20200221 - Texture angle
-    ss.floorangle := 0;
-    ss.ceilingangle := 0;
+    ss.floorangle := 0;     // JVAL: 20200221 - Texture angle
+    ss.flooranglex := 0;    // JVAL: 20201229 - Texture angle rover
+    ss.floorangley := 0;    // JVAL: 20201229 - Texture angle rover
+    ss.ceilingangle := 0;   // JVAL: 20200221 - Texture angle
+    ss.ceilinganglex := 0;  // JVAL: 20201229 - Texture angle rover
+    ss.ceilingangley := 0;  // JVAL: 20201229 - Texture angle rover
 {$IFDEF OPENGL}
     ss.floorlightlevel := ss.lightlevel;
     ss.ceilinglightlevel := ss.lightlevel;
@@ -702,6 +731,9 @@ begin
     // [kb] For R_WiggleFix
     ss.cachedheight := 0;
     ss.scaleindex := 0;
+    // JVAL: 20201225 - Speed up maps with large number of slopes
+    ss.floorvisslope := -1;
+    ss.ceilingvisslope := -1;
 {$ENDIF}
     // killough 4/11/98 sector used to get ceiling lighting:
     ss.ceilinglightsec := -1;
@@ -805,8 +837,7 @@ begin
     result := false;
     exit;
   end;
-  if (doomdnum = MT_RAISEFLOORTOANGLE) or (doomdnum = MT_LOWERFLOORTOANGLE) or
-     (doomdnum = MT_RAISECEILINGTOANGLE) or (doomdnum = MT_LOWERCEILINGTOANGLE) then
+  if P_IsEasySlopeItem(doomdnum) then
   begin
     result := false;
     exit;
@@ -1869,9 +1900,6 @@ begin
   // will be set by player think.
   players[consoleplayer].viewz := 1;
 
-  // Make sure all sounds are stopped before Z_FreeTags.
-  S_Start;
-
 {$IFDEF OPENGL}
   gld_CleanMemory; // JVAL OPENGL
 {$ENDIF}
@@ -2015,6 +2043,11 @@ begin
     printf('P_LoadThings()'#13#10);
   P_LoadThings(lumpnum + Ord(ML_THINGS), P_RadixLump(lumpnum + Ord(ML_RTHINGS), 'RTHINGS'));
 
+  // JVAL: 20201229 - Easy floor and ceiling texture angle
+  if devparm then
+    printf('P_AdjustEasyAngle()'#13#10);
+  P_AdjustEasyAngle;
+
   if devparm then
     printf('P_LoadGrid()'#13#10);
   P_LoadGrid(P_RadixLump(lumpnum + Ord(ML_RGRID), 'RGRID')); // JVAL: 20200303 - Load radix grid
@@ -2078,6 +2111,7 @@ begin
   gld_PreprocessLevel; // JVAL OPENGL
 {$ENDIF}
 
+  S_Start;
   R_SetInterpolateSkipTicks(2);
 end;
 

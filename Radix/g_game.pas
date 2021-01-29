@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -32,6 +32,7 @@ unit g_game;
 interface
 
 uses
+  d_delphi,
   doomdef,
   m_fixed,
   d_event,
@@ -282,10 +283,17 @@ var
 const
   PLAYERMAXPLASMABOMBS: integer = 99;
 
+const
+  NUMKEYS = 256;
+
+var
+  gamekeydown: array[0..NUMKEYS - 1] of boolean;
+  mousebuttons: PBooleanArray;
+  joybuttons: PBooleanArray;
+
 implementation
 
 uses
-  d_delphi,
   c_cmds,
   z_zone,
   doomstat,
@@ -389,17 +397,14 @@ end;
 
 const
   SLOWTURNTICS = 6;
-  NUMKEYS = 256;
 
 var
-  gamekeydown: array[0..NUMKEYS - 1] of boolean;
   turnheld: integer;
 
   lookheld: integer;  // JVAL Look UP and DOWN
   lookheld2: integer; // JVAL Look RIGHT and LEFT
 
   mousearray: array[0..2] of boolean;
-  mousebuttons: PBooleanArray;
 
 // mouse values are used once
   mousex: integer = 0;
@@ -416,7 +421,6 @@ var
   joyxmove: integer;
   joyymove: integer;
   joyarray: array[0..NUMJOYBUTTONS - 1] of boolean;
-  joybuttons: PBooleanArray;
 
   savegameslot: integer;
   savedescription: string;
@@ -818,6 +822,7 @@ begin
     if playeringame[i] then
       if players[i].mo = nil then
       begin
+        I_Warning('G_DoLoadLevel(): Null player actor, is player start missing?'#13#10);
         gamestate := GS_DEMOSCREEN;
         D_StartTitle;
         exit;
@@ -1737,10 +1742,6 @@ begin
 
   len := integer(save_p) - integer(savebuffer);
   M_WriteFile(name, savebuffer, len);
-  save_p := savebuffer;
-
-  len := integer(save_p) - integer(savebuffer);
-  M_AppendFile(name, savebuffer, len);
   save_p := savebuffer;
 
   P_ArchivePlayers;

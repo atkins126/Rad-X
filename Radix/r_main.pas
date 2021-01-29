@@ -969,6 +969,7 @@ begin
   
   if focallength = oldfocallength then
     exit;
+  oldfocallength := focallength;
 
   for i := 0 to FINEANGLES div 2 - 1 do
   begin
@@ -2177,7 +2178,7 @@ begin
   R_SetDrawSegFunctions;  // version 205
   if usemultithread then
   begin
-    if (videomode = vm8bit) then
+    if videomode = vm8bit then
       R_DoRenderPlayerView8_MultiThread(player)
     else
       R_DoRenderPlayerView32_MultiThread(player);

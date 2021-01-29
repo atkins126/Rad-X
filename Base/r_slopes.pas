@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -200,38 +200,49 @@ begin
   maxvisslope := -1;
 end;
 
-function R_FindVisSlope(const sectorID: Integer; const virtualfloor: Boolean): Pvisslope_t;
-var
-  i: integer;
-begin
-  Result := @visslopes[0];
-  for i := 0 to lastvisslope - 1 do
-  begin
-    if Result.sectorID = sectorID then
-      if Result.virtualfloor = virtualfloor then
-        exit;
-    inc(Result);
-  end;
-
-  Result := R_NewVisSlope;
-  Result.sectorID := sectorID;
-  Result.virtualfloor := virtualfloor;
-end;
-
 function R_FindExistingVisSlope(const sectorID: Integer; const virtualfloor: Boolean): Pvisslope_t;
 var
-  i: integer;
+  sec: Psector_t;
 begin
-  result := @visslopes[0];
-  for i := 0 to lastvisslope - 1 do
+  sec := @sectors[sectorID];
+  if virtualfloor then
   begin
-    if result.sectorID = sectorID then
-      if result.virtualfloor = virtualfloor then
-        exit;
-    inc(Result);
+    if (sec.floorvisslope >= 0) and (sec.floorvisslope < lastvisslope) then
+      if (visslopes[sec.floorvisslope].sectorID = sectorID) and visslopes[sec.floorvisslope].virtualfloor then
+      begin
+        Result := @visslopes[sec.floorvisslope];
+        Exit;
+      end;
+  end
+  else
+  begin
+    if (sec.ceilingvisslope >= 0) and (sec.ceilingvisslope < lastvisslope) then
+      if (visslopes[sec.ceilingvisslope].sectorID = sectorID) and not visslopes[sec.ceilingvisslope].virtualfloor then
+      begin
+        Result := @visslopes[sec.ceilingvisslope];
+        Exit;
+      end;
   end;
 
   Result := nil;
+end;
+
+function R_FindVisSlope(const sectorID: Integer; const virtualfloor: Boolean): Pvisslope_t;
+begin
+  Result := R_FindExistingVisSlope(sectorID, virtualfloor);
+
+  if Result = nil then
+  begin
+    Result := R_NewVisSlope;
+    Result.sectorID := sectorID;
+    Result.virtualfloor := virtualfloor;
+
+    // JVAL: 20201225 - Save vislope information in sector structure
+    if virtualfloor then
+      sectors[sectorID].floorvisslope := lastvisslope - 1
+    else
+      sectors[sectorID].ceilingvisslope := lastvisslope - 1;
+  end;
 end;
 
 var
@@ -247,17 +258,20 @@ var
   angle: angle_t;
   distance: fixed_t;
   yslopey: fixed_t;
-  length: fixed_t;
+  len: fixed_t;
   index: LongWord;
   ncolornum: integer;
   x: integer;
-  Theta, rTheta: float;
+  Theta, rTheta: integer;
   yidx: integer;
   screenDX: integer;
   zleft, zright: float;
   xleft, xright: fixed_t;
 begin
   if y >= viewheight then
+    exit;
+
+  if x2 - x1 < 0 then
     exit;
 
   if usefake3d and zaxisshift then
@@ -277,10 +291,11 @@ begin
 
   xleft := visslope.screenleft[yidx];
   xright := visslope.screenright[yidx];
+
   screenDX := xright - xleft + 1;
 
-  if x2 - x1 < 0 then
-    exit;
+  zleft := zleft * screenDX;
+  zright := zright * screenDX;
 
   ds_y := y;
 
@@ -305,23 +320,24 @@ begin
   for x := x1 to x2 do
   begin
     if x = xleft then
-      distance := Abs(Round(zleft))
+      distance := Abs(Round(zleft / screenDX))
     else if x = xright then
-      distance := Abs(Round(zright))
+      distance := Abs(Round(zright / screenDX))
     else
     begin
-      Theta := (x - xleft) / screenDX;
-      rTheta := 1.0 - Theta;
+      Theta := x - xleft;
+      rTheta := screenDX - Theta;
 
       distance := Abs(Round(1.0 / (rTheta / zleft + Theta / zright)));
     end;
 
-    length := FixedMul(distance, distscale[x]);
+    len := FixedMul(distance, distscale[x]);
+
     angle := (viewangle + xtoviewangle[x]) shr FRACBITS;
 
-    ds_xfrac := viewx + FixedMul(fixedcosine[angle], length)
+    ds_xfrac := viewx + FixedMul(fixedcosine[angle], len)
     {$IFDEF DOOM_OR_STRIFE} + xoffs{$ENDIF} {$IFDEF HEXEN} + ds_xoffset{$ENDIF};
-    ds_yfrac := -viewy - FixedMul(fixedsine[angle], length)
+    ds_yfrac := -viewy - FixedMul(fixedsine[angle], len)
     {$IFDEF DOOM_OR_STRIFE} + yoffs{$ENDIF} {$IFDEF HEXEN} + ds_yoffset{$ENDIF};
 
     if fixedcolormap = nil then
@@ -379,11 +395,11 @@ var
   angle: angle_t;
   distance: fixed_t;
   yslopey: fixed_t;
-  length: fixed_t;
+  len: fixed_t;
   index: LongWord;
   ncolornum: integer;
   x: integer;
-  Theta, rTheta: float;
+  Theta, rTheta: integer;
   yidx: integer;
   screenDX: integer;
   zleft, zright: float;
@@ -395,6 +411,9 @@ var
   cnt: integer;
 begin
   if y >= viewheight then
+    exit;
+
+  if x2 - x1 < 0 then
     exit;
 
   if usefake3d and zaxisshift then
@@ -414,10 +433,11 @@ begin
 
   xleft := visslope.screenleft[yidx];
   xright := visslope.screenright[yidx];
+
   screenDX := xright - xleft + 1;
 
-  if x2 - x1 < 0 then
-    exit;
+  zleft := zleft * screenDX;
+  zright := zright * screenDX;
 
   ds_y := y;
 
@@ -448,32 +468,43 @@ begin
     if (x = x1) or (x = x2) or (x mod SLOPESRECALCSTEP = 0) then
     begin
       if x = xleft then
-        distance := Abs(Round(zleft))
+        distance := Abs(Round(zleft / ScreenDX))
       else if x = xright then
-        distance := Abs(Round(zright))
+        distance := Abs(Round(zright / ScreenDX))
       else
       begin
-        Theta := (x - xleft) / screenDX;
-        rTheta := 1.0 - Theta;
+        Theta := x - xleft;
+        rTheta := screenDX - Theta;
 
         distance := Abs(Round(1.0 / (rTheta / zleft + Theta / zright)));
       end;
 
-      length := FixedMul(distance, distscale[x]);
+      len := FixedMul(distance, distscale[x]);
+
       angle := (viewangle + xtoviewangle[x]) shr FRACBITS;
 
-      xfrac1 := viewx + FixedMul(fixedcosine[angle], length)
+      xfrac1 := viewx + FixedMul(fixedcosine[angle], len)
       {$IFDEF DOOM_OR_STRIFE} + xoffs{$ENDIF} {$IFDEF HEXEN} + ds_xoffset{$ENDIF};
-      yfrac1 := -viewy - FixedMul(fixedsine[angle], length)
+      yfrac1 := -viewy - FixedMul(fixedsine[angle], len)
       {$IFDEF DOOM_OR_STRIFE} + yoffs{$ENDIF} {$IFDEF HEXEN} + ds_yoffset{$ENDIF};
+
       if x = x1 then
       begin
         xfrac2 := xfrac1;
         yfrac2 := yfrac1;
+        ds_xstep := 0;
+        ds_ystep := 0;
+      end
+      else if cnt = SLOPESRECALCSTEP then
+      begin
+        ds_xstep := (xfrac1 - xfrac2) div SLOPESRECALCSTEP;
+        ds_ystep := (yfrac1 - yfrac2) div SLOPESRECALCSTEP;
+      end
+      else
+      begin
+        ds_xstep := (xfrac1 - xfrac2) div cnt;
+        ds_ystep := (yfrac1 - yfrac2) div cnt;
       end;
-
-      ds_xstep := (xfrac1 - xfrac2) div cnt;
-      ds_ystep := (yfrac1 - yfrac2) div cnt;
 
       if fixedcolormap = nil then
       begin
@@ -532,11 +563,11 @@ var
   angle: fixed_t;
   distance: fixed_t;
   yslopey: fixed_t;
-  length: fixed_t;
+  len: fixed_t;
   index: LongWord;
   ncolornum: integer;
   x: integer;
-  Theta, rTheta: float;
+  Theta, rTheta: integer;
   yidx: integer;
   screenDX: integer;
   zleft, zright: float;
@@ -548,10 +579,12 @@ var
   cnt: integer;
   pviewsin, pviewcos: float;
   tcos, tsin: float;
-  txoffs, tyoffs: fixed_t;
   tviewx, tviewy: fixed_t;
 begin
   if y >= viewheight then
+    exit;
+
+  if x2 - x1 < 0 then
     exit;
 
   if usefake3d and zaxisshift then
@@ -571,10 +604,11 @@ begin
 
   xleft := visslope.screenleft[yidx];
   xright := visslope.screenright[yidx];
+
   screenDX := xright - xleft + 1;
 
-  if x2 - x1 < 0 then
-    exit;
+  zleft := zleft * screenDX;
+  zright := zright * screenDX;
 
   ds_y := y;
 
@@ -596,11 +630,19 @@ begin
   ds_x1 := x1;
   cnt := 0;
 
-  tsin := sin(-ds_angle / ANGLE_MAX * 2 * pi);
+{  tsin := sin(-ds_angle / ANGLE_MAX * 2 * pi);
   tcos := cos(-ds_angle / ANGLE_MAX * 2 * pi);
 
   tviewx := Round(viewx * tcos - viewy * tsin);
-  tviewy := Round(viewx * tsin + viewy * tcos);
+  tviewy := Round(viewx * tsin + viewy * tcos);}
+  tsin := ds_sine;
+  tcos := ds_cosine;
+
+  tviewx := Round((viewx - ds_anglex) * tcos - (viewy - ds_angley) * tsin) + ds_anglex;
+  tviewy := Round((viewx - ds_anglex) * tsin + (viewy - ds_angley) * tcos) + ds_angley;
+
+//  tviewx := Round(viewx * tcos - viewy * tsin) + ds_anglex;
+//  tviewy := Round(viewx * tsin + viewy * tcos) + ds_angley;
 
   // JVAL: 20200430 - For slope lightmap
   yslopey := slyslope[y];
@@ -611,33 +653,42 @@ begin
     if (x = x1) or (x = x2) or (x mod ANGLESLOPESRECALCSTEP = 0) then
     begin
       if x = xleft then
-        distance := Abs(Round(zleft))
+        distance := Abs(Round(zleft / screenDX))
       else if x = xright then
-        distance := Abs(Round(zright))
+        distance := Abs(Round(zright / screenDX))
       else
       begin
-        Theta := (x - xleft) / screenDX;
-        rTheta := 1.0 - Theta;
+        Theta := x - xleft;
+        rTheta := screenDX - Theta;
 
         distance := Abs(Round(1.0 / (rTheta / zleft + Theta / zright)));
       end;
 
-      length := FixedMul(distance, distscale[x]);
+      len := FixedMul(distance, distscale[x]);
       angle := (viewangle + xtoviewangle[x] - ds_angle) shr FRACBITS;
 
-      xfrac1 := tviewx + FixedMul(fixedcosine[angle], length)
+      xfrac1 := tviewx + FixedMul(fixedcosine[angle], len)
       {$IFDEF DOOM_OR_STRIFE} + xoffs{$ENDIF} {$IFDEF HEXEN} + ds_xoffset{$ENDIF};
-      yfrac1 := -tviewy - FixedMul(fixedsine[angle], length)
+      yfrac1 := -tviewy - FixedMul(fixedsine[angle], len)
       {$IFDEF DOOM_OR_STRIFE} + yoffs{$ENDIF} {$IFDEF HEXEN} + ds_yoffset{$ENDIF};
 
       if x = x1 then
       begin
         xfrac2 := xfrac1;
         yfrac2 := yfrac1;
+        ds_xstep := 0;
+        ds_ystep := 0;
+      end
+      else if cnt = SLOPESRECALCSTEP then
+      begin
+        ds_xstep := (xfrac1 - xfrac2) div SLOPESRECALCSTEP;
+        ds_ystep := (yfrac1 - yfrac2) div SLOPESRECALCSTEP;
+      end
+      else
+      begin
+        ds_xstep := (xfrac1 - xfrac2) div cnt;
+        ds_ystep := (yfrac1 - yfrac2) div cnt;
       end;
-
-      ds_xstep := (xfrac1 - xfrac2) div cnt;
-      ds_ystep := (yfrac1 - yfrac2) div cnt;
 
       if fixedcolormap = nil then
       begin
@@ -749,6 +800,12 @@ begin
   ds_angle := pl.angle;
   if ds_angle <> 0 then
   begin
+    ds_anglex := pl.anglex;
+    ds_angley := pl.angley;
+    ds_sine := sin(-ds_angle / ANGLE_MAX * 2 * pi);    // JVAL: 20200225 - Texture angle
+    ds_cosine := cos(ds_angle / ANGLE_MAX * 2 * pi);  // JVAL: 20200225 - Texture angle
+    ds_viewsine := sin((viewangle - ds_angle) / ANGLE_MAX * 2 * pi);    // JVAL: 20200225 - Texture angle
+    ds_viewcosine := cos((viewangle - ds_angle) / ANGLE_MAX * 2 * pi);  // JVAL: 20200225 - Texture angle
     // Slope with angle
     for x := pl.minx to stop do
     begin

@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -372,7 +372,16 @@ uses
   radix_extra_sprites in 'Radix\radix_extra_sprites.pas',
   p_easyslope in 'Base\p_easyslope.pas',
   radix_vertical_fight in 'Radix\radix_vertical_fight.pas',
-  w_wadreader in 'Base\w_wadreader.pas';
+  w_wadreader in 'Base\w_wadreader.pas',
+  p_easyangle in 'Base\p_easyangle.pas',
+  libflac in 'AUDIOLIB\libflac.pas',
+  libogg in 'AUDIOLIB\libogg.pas',
+  libsndfile in 'AUDIOLIB\libsndfile.pas',
+  libvorbis in 'AUDIOLIB\libvorbis.pas',
+  c_lib in 'C_LIB\c_lib.pas',
+  scanf in 'C_LIB\scanf.pas',
+  scanf_c in 'C_LIB\scanf_c.pas',
+  audiolib in 'AUDIOLIB\audiolib.pas';
 
 var
   Saved8087CW: Word;

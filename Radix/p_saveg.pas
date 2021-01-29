@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -232,10 +232,12 @@ begin
     put := @put[2];
     PInteger(put)^ := sec.ceilingheight;
     put := @put[2];
+
     Pchar8_t(put)^ := flats[sec.floorpic].name;
     put := @put[SizeOf(char8_t) div SizeOf(SmallInt)];
     Pchar8_t(put)^ := flats[sec.ceilingpic].name;
     put := @put[SizeOf(char8_t) div SizeOf(SmallInt)];
+
     put[0] := sec.lightlevel;
     put := @put[1];
     put[0] := sec.special; // needed?
@@ -266,7 +268,15 @@ begin
     // JVAL: 20200221 - Texture angle
     PLongWord(put)^ := sec.floorangle;
     put := @put[2];
+    PInteger(put)^ := sec.flooranglex;
+    put := @put[2];
+    PInteger(put)^ := sec.floorangley;
+    put := @put[2];
     PLongWord(put)^ := sec.ceilingangle;
+    put := @put[2];
+    PInteger(put)^ := sec.ceilinganglex;
+    put := @put[2];
+    PInteger(put)^ := sec.ceilingangley;
     put := @put[2];
 
     // JVAL: 20200522 - Slope values
@@ -329,6 +339,7 @@ begin
       put := @put[2];
       PInteger(put)^ := si.rowoffset;
       put := @put[2];
+
       Pchar8_t(put)^ := R_NameForSideTexture(si.toptexture);
       put := @put[SizeOf(char8_t) div SizeOf(SmallInt)];
       Pchar8_t(put)^ := R_NameForSideTexture(si.bottomtexture);
@@ -414,7 +425,15 @@ begin
     // JVAL: 20200221 - Texture angle
     sec.floorangle := PLongWord(get)^;
     get := @get[2];
+    sec.flooranglex := PInteger(get)^;
+    get := @get[2];
+    sec.floorangley := PInteger(get)^;
+    get := @get[2];
     sec.ceilingangle := PLongWord(get)^;
+    get := @get[2];
+    sec.ceilinganglex := PInteger(get)^;
+    get := @get[2];
+    sec.ceilingangley := PInteger(get)^;
     get := @get[2];
 
     // JVAL: 20200522 - Slope values

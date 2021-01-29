@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 1995 by Epic MegaGames, Inc.
 //  Copyright (C) 1993-1996 by id Software, Inc.
-//  Copyright (C) 2004-2020 by Jim Valavanis
+//  Copyright (C) 2004-2021 by Jim Valavanis
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -211,7 +211,11 @@ type
     radixmapYmult: integer;
     radixmapYadd: integer;
     floorangle: angle_t; // JVAL: 20200221 - Texture angle
+    flooranglex: fixed_t; // JVAL: 20201229 - Texture angle rover
+    floorangley: fixed_t; // JVAL: 20201229 - Texture angle rover
     ceilingangle: angle_t; // JVAL: 20200221 - Texture angle
+    ceilinganglex: fixed_t; // JVAL: 20201229 - Texture angle rover
+    ceilingangley: fixed_t; // JVAL: 20201229 - Texture angle rover
     radixflags: integer; // JVAL: 20200407 - Pass sector flags from RADIX.DAT
 {$IFDEF OPENGL}
     floorlightlevel: smallint;
@@ -230,6 +234,9 @@ type
     // [kb] For R_WiggleFix
     cachedheight: integer;
     scaleindex: integer;
+    // JVAL: 20201225 - Speed up maps with large number of slopes
+    floorvisslope: integer;
+    ceilingvisslope: integer;
 {$ENDIF}
   end;
   sector_tArray = packed array[0..$FFFF] of sector_t;
@@ -332,7 +339,7 @@ const
   // Line rendering flags
   LRF_ISOLATED = 1;
   LRF_TRANSPARENT = 2;
-  LRF_SLOPED = 4;   // JVAL: Slopes
+  LRF_SLOPED = 4; // JVAL: Slopes
 
 const
   // Sector rendering flags
@@ -347,6 +354,9 @@ const
   SRF_SLOPED = SRF_SLOPEFLOOR + SRF_SLOPECEILING; // JVAL: Slopes
   SRF_RADIXSLOPEFLOOR = 128; // JVAL: Radix
   SRF_RADIXSLOPECEILING = 256; // JVAL: Radix
+  SRF_INTERPOLATE_ROTATE = 512; 
+  SRF_INTERPOLATE_FLOORSLOPE = 1024;
+  SRF_INTERPOLATE_CEILINGSLOPE = 2048;
 
 const
   // Vissprite render flags

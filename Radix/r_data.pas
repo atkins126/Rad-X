@@ -706,7 +706,7 @@ begin
 
   // JVAL: 20200515 - Merge PNAMES0 & PNAMES
   nummappatches := nummappatches0 + nummappatches1;
-  patcheslen := patcheslen0 + patcheslen1 - SizeOf(integer);
+  patcheslen := nummappatches * SizeOf(char8_t) + SizeOf(integer);
   names := Z_Malloc(patcheslen, PU_STATIC, nil);
   PInteger(names)^ := nummappatches;
   for i := SizeOf(Integer) to patcheslen0 - 1 do
@@ -1209,10 +1209,10 @@ begin
 
     // JVAL: Found a flat outside F_START, F_END
     result := numflats;
+    realloc(pointer(flats), numflats * SizeOf(pointer), (numflats + 1) * SizeOf(pointer));
     inc(numflats);
-    flats := Z_ReAlloc(flats, numflats * SizeOf(pointer), PU_STATIC, nil);
 
-    flats[result] := Z_Malloc(SizeOf(flat_t), PU_STATIC, nil);
+    flats[result] := malloc(SizeOf(flat_t));
     flats[result].name := W_GetNameForNum(i);
     flats[result].translation := result;
     flats[result].lump := i;
@@ -1262,10 +1262,10 @@ begin
 
     // JVAL: Found a flat outside F_START, F_END
     result := numflats;
+    realloc(pointer(flats), numflats * SizeOf(pointer), (numflats + 1) * SizeOf(pointer));
     inc(numflats);
-    flats := Z_ReAlloc(flats, numflats * SizeOf(pointer), PU_STATIC, nil);
 
-    flats[result] := Z_Malloc(SizeOf(flat_t), PU_STATIC, nil);
+    flats[result] := malloc(SizeOf(flat_t));
     flats[result].name := W_GetNameForNum(i);
     flats[result].translation := result;
     flats[result].lump := i;
@@ -1289,10 +1289,10 @@ begin
 
     // JVAL: Found a flat outside F_START, F_END
     result := numflats;
+    realloc(pointer(flats), numflats * SizeOf(pointer), (numflats + 1) * SizeOf(pointer));
     inc(numflats);
-    flats := Z_ReAlloc(flats, numflats * SizeOf(pointer), PU_STATIC, nil);
 
-    flats[result] := Z_Malloc(SizeOf(flat_t), PU_STATIC, nil);
+    flats[result] := malloc(SizeOf(flat_t));
     flats[result].name := W_GetNameForNum(lump);
     flats[result].translation := result;
     flats[result].lump := lump;
